@@ -1,0 +1,10 @@
+﻿{
+  "applications": {
+    "PortGen.Web": {
+      "type": "dotnet-project",
+      "launchUrl": "https://localhost:44393",
+      "path": "../../../src/PortGen.Web/PortGen.Web.csproj",
+      "kubernetesService": ".*-web$"
+    }
+  }
+}

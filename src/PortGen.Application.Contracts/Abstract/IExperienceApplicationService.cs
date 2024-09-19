@@ -9,7 +9,7 @@ namespace PortGen.Abstract;
 public interface IExperienceApplicationService : IApplicationService
 {
     public void CreateExperience(ExperienceDto ExperienceDto);
-    public Task<IEnumerable<ExperienceDto>> GetExperiencesAsync();
+    public Task<IEnumerable<ExperienceDto>> GetExperiencesAsync(Guid aboutId);
     
     public Task<ExperienceDto> UpdateExperienceAsync(ExperienceDto ExperienceDto);
     

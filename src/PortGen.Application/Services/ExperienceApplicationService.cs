@@ -19,19 +19,21 @@ public class ExperienceApplicationService : ApplicationService, IExperienceAppli
 
     public void CreateExperience(ExperienceDto experienceDto) => _repository.InsertAsync(new Experience
     {
+        AboutId = experienceDto.AboutId,
         Description = experienceDto.Description,
         Title = experienceDto.Title,
         StartDate = experienceDto.StartDate,
         EndDate = experienceDto.EndDate
     });
 
-    public async Task<IEnumerable<ExperienceDto>> GetExperiencesAsync()
+    public async Task<IEnumerable<ExperienceDto>> GetExperiencesAsync(Guid aboutId)
     {
-        var experiences = await _repository.GetListAsync();
+        var experiences = await _repository.GetListAsync(t => t.AboutId == aboutId);
 
         return experiences.Select(s => new ExperienceDto
         {
             Id = s.Id,
+            AboutId = s.AboutId,
             Description = s.Description,
             Title = s.Title,
             StartDate = s.StartDate,

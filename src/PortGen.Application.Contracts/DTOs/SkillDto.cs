@@ -5,6 +5,7 @@ namespace PortGen.DTOs;
 
 public class SkillDto : BaseDto
 {
+    public Guid AboutId { get; set; }
     public string Name { get; set; }
     public string Description { get; set; }
     public string Image { get; set; } 

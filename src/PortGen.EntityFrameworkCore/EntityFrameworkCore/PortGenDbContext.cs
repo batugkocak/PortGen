@@ -79,7 +79,7 @@ public class PortGenDbContext :
         builder.ConfigureOpenIddict();
         builder.ConfigureTenantManagement();
         builder.ConfigureBlobStoring();
-        
+
         /* Configure your own tables/entities inside here */
 
         //builder.Entity<YourEntity>(b =>
@@ -88,9 +88,19 @@ public class PortGenDbContext :
         //    b.ConfigureByConvention(); //auto configure for the base class props
         //    //...
         //});
+
+        builder.Entity<Experience>()
+            .HasOne(t => t.About)
+            .WithMany(t => t.Experiences)
+            .HasForeignKey(t => t.AboutId);
+
+        builder.Entity<Skill>()
+            .HasOne(t => t.About)
+            .WithMany(t => t.Skills)
+            .HasForeignKey(t => t.AboutId);
     }
 
     public DbSet<About> Abouts { get; set; }
     public DbSet<Experience> Experiences { get; set; }
-    public DbSet<Skill> Skills{ get; set; }
+    public DbSet<Skill> Skills { get; set; }
 }

@@ -2,21 +2,25 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using PortGen.Abstract;
 using PortGen.DTOs;
 using PortGen.Entities;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.ObjectExtending;
 
 namespace PortGen.Services;
 
 public class AboutApplicationService : ApplicationService, IAboutApplicationService
 {
     private readonly IRepository<About, Guid> _aboutRepository;
+    private readonly IMapper _mapper;
 
-    public AboutApplicationService(IRepository<About, Guid> aboutRepository)
+    public AboutApplicationService(IRepository<About, Guid> aboutRepository, IMapper mapper)
     {
         _aboutRepository = aboutRepository;
+        _mapper = mapper;
     }
 
     public void CreateAbout(AboutDto aboutDto)
@@ -29,10 +33,24 @@ public class AboutApplicationService : ApplicationService, IAboutApplicationServ
         });
     }
 
+    public async Task<AboutDto> GetAboutByIdAsync(Guid id)
+    {
+        var getAbout = await _aboutRepository.GetAsync(t => t.Id == id && !t.IsDeleted);
+
+        return new AboutDto
+        {
+            Id = getAbout.Id,
+            Information = getAbout.Information,
+            Name = getAbout.Name,
+            Surname = getAbout.Surname,
+            CreationTime = getAbout.CreationTime
+        };
+    }
+
     public async Task<IEnumerable<AboutDto>> GetAboutAsync()
     {
         var aboutList = await _aboutRepository.GetListAsync();
-        
+
         return aboutList.Select(a => new AboutDto
         {
             Id = a.Id,
@@ -49,7 +67,7 @@ public class AboutApplicationService : ApplicationService, IAboutApplicationServ
     {
         var about = await _aboutRepository.FindAsync(aboutDto.Id);
         if (about is null) return new AboutDto();
-        
+
         about.Name = aboutDto.Name;
         about.Surname = aboutDto.Surname;
         about.Information = aboutDto.Information;

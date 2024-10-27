@@ -17,14 +17,27 @@ public class ExperienceApplicationService : ApplicationService, IExperienceAppli
     public ExperienceApplicationService(IRepository<Experience, Guid> repository) => _repository = repository;
 
 
-    public void CreateExperience(ExperienceDto experienceDto) => _repository.InsertAsync(new Experience
+    public void CreateExperience(ExperienceDto experienceDto)
     {
-        AboutId = experienceDto.AboutId,
-        Description = experienceDto.Description,
-        Title = experienceDto.Title,
-        StartDate = experienceDto.StartDate,
-        EndDate = experienceDto.EndDate
-    });
+        try
+        {
+            _repository.InsertAsync(new Experience
+            {
+                AboutId = experienceDto.AboutId,
+                Description = experienceDto.Description,
+                Title = experienceDto.Title,
+                StartDate = Convert.ToDateTime(experienceDto.StartDate),
+                EndDate = Convert.ToDateTime(experienceDto.EndDate),
+                OrderNo = experienceDto.OrderNo
+            });
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+
+    }
 
     public async Task<IEnumerable<ExperienceDto>> GetExperiencesAsync(Guid aboutId)
     {
@@ -36,11 +49,12 @@ public class ExperienceApplicationService : ApplicationService, IExperienceAppli
             AboutId = s.AboutId,
             Description = s.Description,
             Title = s.Title,
-            StartDate = s.StartDate,
-            EndDate = s.EndDate,
+            StartDate = s.StartDate.ToShortDateString(),
+            EndDate = s.EndDate?.ToShortDateString(),
             CreationTime = s.CreationTime,
             LastModificationTime = s.LastModificationTime,
-            IsDeleted = s.IsDeleted
+            IsDeleted = s.IsDeleted,
+            OrderNo = s.OrderNo
         });
     }
 
@@ -52,8 +66,9 @@ public class ExperienceApplicationService : ApplicationService, IExperienceAppli
 
         experience.Description = request.Description;
         experience.Title = request.Title;
-        experience.StartDate = request.StartDate;
-        experience.EndDate = request.EndDate;
+        experience.StartDate = Convert.ToDateTime(request.StartDate);
+        experience.EndDate = Convert.ToDateTime(request.EndDate);
+        experience.OrderNo = request.OrderNo;
 
         var result = await _repository.UpdateAsync(experience, true);
 
@@ -62,10 +77,11 @@ public class ExperienceApplicationService : ApplicationService, IExperienceAppli
             Id = result.Id,
             Description = result.Description,
             Title = result.Title,
-            StartDate = result.StartDate,
-            EndDate = result.EndDate,
+            StartDate = result.StartDate.ToShortDateString(),
+            EndDate = result.EndDate?.ToShortDateString(),
             CreationTime = result.CreationTime,
             LastModificationTime = result.LastModificationTime,
+            OrderNo = result.OrderNo
         };
     }
 

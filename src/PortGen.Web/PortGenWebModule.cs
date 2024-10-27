@@ -141,6 +141,7 @@ public class PortGenWebModule : AbpModule
         ConfigureAutoApiControllers();
         ConfigureSwaggerServices(context.Services);
         ConfigureRatelimiters(context);
+        ConfigureCorsPolicy(context);
 
         Configure<PermissionManagementOptions>(options =>
         {
@@ -160,6 +161,18 @@ public class PortGenWebModule : AbpModule
                     bundle.AddFiles("/global-styles.css");
                 }
             );
+        });
+    }
+
+    private void ConfigureCorsPolicy(ServiceConfigurationContext context)
+    {
+        context.Services.AddCors(cors =>
+        {
+            cors.AddDefaultPolicy(opt =>
+            {
+                opt.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin();
+                //.WithOrigins("http://localhost:3000", "https://localhost:3000");
+            });
         });
     }
 
@@ -350,6 +363,7 @@ public class PortGenWebModule : AbpModule
             options.SwaggerEndpoint("/swagger/v1/swagger.json", "PortGen API");
         });
         app.UseAuditing();
+        app.UseCors();
         app.UseAbpSerilogEnrichers();
         app.UseConfiguredEndpoints(endpoints =>
         {

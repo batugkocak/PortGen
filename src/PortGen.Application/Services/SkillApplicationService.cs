@@ -18,14 +18,16 @@ public class SkillApplicationService : ApplicationService, ISkillApplicationServ
     
     public void CreateSkill(SkillDto skillDto) =>   _skillRepository.InsertAsync(new Skill
     {
+        AboutId = skillDto.AboutId,
         Name = skillDto.Name,
         Description = skillDto.Description,
         Image = skillDto.Image
     });
 
-    public async Task<IEnumerable<SkillDto>> GetSkillsAsync()
+
+    public async Task<IEnumerable<SkillDto>> GetSkillsAsync(Guid id)
     {
-        var skills = await _skillRepository.GetListAsync();
+        var skills = await _skillRepository.GetListAsync(t => t.AboutId == id && !t.IsDeleted);
         
         return skills.Select(s => new SkillDto
         {

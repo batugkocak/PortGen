@@ -180,7 +180,7 @@ public class PortGenWebModule : AbpModule
     {
         context.Services.AddRateLimiter(limiterOpt =>
         {
-            limiterOpt.OnRejected = (context, cancellationToken) =>
+            limiterOpt.OnRejected = async (context, cancellationToken) =>
             {
                 if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
                 {
@@ -189,11 +189,14 @@ public class PortGenWebModule : AbpModule
                 }
 
                 context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+                context.HttpContext.Response.ContentType = "application/json";
+
+                // JSON formatýnda hata mesajý
+                await context.HttpContext.Response.WriteAsync("{\"message\": \"Too many requests, please try again later.\"}", cancellationToken);
+
                 context.HttpContext.RequestServices.GetService<ILoggerFactory>()?
                     .CreateLogger("Microsoft.AspNetCore.RateLimitingMiddleware")
                     .LogWarning("On Rejected: {RequestPath}", context.HttpContext.Request.Path);
-
-                return new ValueTask();
             };
 
             limiterOpt.AddPolicy("UserBasedRateLimiting", context =>

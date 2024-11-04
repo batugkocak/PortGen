@@ -41,7 +41,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging;
+using Polly.RateLimit;
 using Volo.Abp.Account.Web;
 using Volo.Abp.AspNetCore.Mvc.UI.Bundling;
 using Volo.Abp.AspNetCore.Mvc.UI.Theme.Shared.Toolbars;
@@ -189,15 +191,22 @@ public class PortGenWebModule : AbpModule
                 }
 
                 context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+
                 context.HttpContext.Response.ContentType = "application/json";
-
                 // JSON formatýnda hata mesajý
-                await context.HttpContext.Response.WriteAsync("{\"message\": \"Too many requests, please try again later.\"}", cancellationToken);
+                await context.HttpContext.Response.WriteAsync($"{{\"message\": \"Too many requests, please try again {retryAfter} minute(s) later.\"}}", cancellationToken);
 
-                context.HttpContext.RequestServices.GetService<ILoggerFactory>()?
-                    .CreateLogger("Microsoft.AspNetCore.RateLimitingMiddleware")
-                    .LogWarning("On Rejected: {RequestPath}", context.HttpContext.Request.Path);
+                //context.HttpContext.RequestServices.GetService<ILoggerFactory>()?
+                //    .CreateLogger("Microsoft.AspNetCore.RateLimitingMiddleware")
+                //    .LogWarning("On Rejected: {RequestPath}", context.HttpContext.Request.Path);
             };
+            limiterOpt.AddFixedWindowLimiter(policyName: "fixed", options =>
+            {
+                options.PermitLimit = 5;
+                options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                options.QueueLimit = 0;
+                options.Window = TimeSpan.FromMinutes(1);
+            });
 
             limiterOpt.AddPolicy("UserBasedRateLimiting", context =>
             {
@@ -234,8 +243,8 @@ public class PortGenWebModule : AbpModule
 
                 if (currentTenant is not null && currentTenant.IsAvailable)
                 {
-                    return RateLimitPartition.GetConcurrencyLimiter(currentTenant!.Name, _ =>
-                        new ConcurrencyLimiterOptions
+                    return RateLimitPartition.GetFixedWindowLimiter(currentTenant!.Name, _ =>
+                        new FixedWindowRateLimiterOptions
                         {
                             PermitLimit = 5,
                             QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
@@ -346,6 +355,8 @@ public class PortGenWebModule : AbpModule
         app.UseCorrelationId();
         app.UseStaticFiles();
         app.UseAbpStudioLink();
+        app.UseCors();
+
         app.UseRouting();
         app.UseAbpSecurityHeaders();
         app.UseAuthentication();
@@ -366,12 +377,10 @@ public class PortGenWebModule : AbpModule
             options.SwaggerEndpoint("/swagger/v1/swagger.json", "PortGen API");
         });
         app.UseAuditing();
-        app.UseCors();
         app.UseAbpSerilogEnrichers();
         app.UseConfiguredEndpoints(endpoints =>
         {
-            endpoints.MapControllers()
-                .RequireRateLimiting("UserBasedRateLimiting");
+            endpoints.MapControllers().RequireRateLimiting("fixed");
         });
     }
 }

@@ -202,7 +202,7 @@ public class PortGenWebModule : AbpModule
             };
             limiterOpt.AddFixedWindowLimiter(policyName: "fixed", options =>
             {
-                options.PermitLimit = 5;
+                options.PermitLimit = 30;
                 options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
                 options.QueueLimit = 0;
                 options.Window = TimeSpan.FromMinutes(1);

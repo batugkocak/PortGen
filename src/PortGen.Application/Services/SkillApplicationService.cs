@@ -14,21 +14,32 @@ public class SkillApplicationService : ApplicationService, ISkillApplicationServ
 {
     private readonly IRepository<Skill, Guid> _skillRepository;
 
-    public SkillApplicationService(IRepository<Skill, Guid> skillRepository )=> _skillRepository = skillRepository;
-    
-    public void CreateSkill(SkillDto skillDto) =>   _skillRepository.InsertAsync(new Skill
-    {
-        AboutId = skillDto.AboutId,
-        Name = skillDto.Name,
-        Description = skillDto.Description,
-        Image = skillDto.Image
-    });
+    public SkillApplicationService(IRepository<Skill, Guid> skillRepository) => _skillRepository = skillRepository;
 
+    public async Task CreateSkill(SkillDto skillDto)
+    {
+        try
+        {
+            var ss = await _skillRepository.InsertAsync(new Skill
+            {
+                AboutId = skillDto.AboutId,
+                Name = skillDto.Name,
+                Description = skillDto.Description,
+                Image = skillDto.Image
+            }, true);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+
+    }
 
     public async Task<IEnumerable<SkillDto>> GetSkillsAsync(Guid id)
     {
         var skills = await _skillRepository.GetListAsync(t => t.AboutId == id && !t.IsDeleted);
-        
+
         return skills.Select(s => new SkillDto
         {
             Id = s.Id,
@@ -44,13 +55,13 @@ public class SkillApplicationService : ApplicationService, ISkillApplicationServ
     public async Task<SkillDto> UpdateSkillAsync(SkillDto dto)
     {
         var skill = await _skillRepository.FindAsync(dto.Id);
-        if(skill is null) return new SkillDto();
-        
+        if (skill is null) return new SkillDto();
+
         skill.Name = dto.Name;
         skill.Description = dto.Description;
         skill.Image = dto.Image;
         skill.LastModificationTime = DateTime.Now;
-      var result =   await _skillRepository.UpdateAsync(skill, true);
+        var result = await _skillRepository.UpdateAsync(skill, true);
 
         return new SkillDto
         {

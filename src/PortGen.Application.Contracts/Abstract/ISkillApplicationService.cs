@@ -8,7 +8,7 @@ namespace PortGen.Abstract;
 
 public interface ISkillApplicationService : IApplicationService
 {
-    public void CreateSkill(SkillDto skillDto);
+    public Task CreateSkill(SkillDto skillDto);
     public Task<IEnumerable<SkillDto>> GetSkillsAsync(Guid id);
     public Task<SkillDto> UpdateSkillAsync(SkillDto skillDto);
     public Task DeleteSkillAsync(Guid id);
